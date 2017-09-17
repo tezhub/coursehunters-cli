@@ -28,7 +28,9 @@ function fetchNavItems() {
           };
         }
       });
-      return Promise.all(navItems.map(item => axios.get(`https://coursehunters.net${item.path}`)));
+      return Promise.all(
+        navItems.map(item => axios.get(`https://coursehunters.net${item.path}`))
+      );
     })
     .then(results => {
       results.forEach(({ data }, i) => {

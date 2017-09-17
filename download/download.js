@@ -1,6 +1,8 @@
-const ProgressBar = require('progress');
+const ProgressBar = require('tezhub-progress');
+const bytes = require('bytes');
 const async = require('async');
 const ora = require('ora');
+const { green, yellow, blue, magenta, cyan } = require('chalk');
 const jswget = require('./jswget');
 
 const spinner = ora();
@@ -54,12 +56,18 @@ DownloadProgress.prototype._getFile = function(url, title, dest, callback) {
     onsend() {},
     onhead(fstat, req, res) {
       const fileSize = parseInt(res.headers['content-length'], 10);
-      bar = new ProgressBar('[:bar] :percent :etas', {
-        complete: '=',
-        incomplete: ' ',
-        width: 50,
-        total: fileSize,
-      });
+      bar = new ProgressBar(
+        `${green('[:bar]')} ${blue(':percent')}  ${yellow(
+          ':current/:total'
+        )}  ${cyan(':rate/s')}  ${magenta(':etas')}`,
+        {
+          complete: '=',
+          incomplete: ' ',
+          width: 50,
+          total: fileSize,
+          format: bytes,
+        }
+      );
       if (fstat && fstat.size) {
         console.log(`Resuming ${title}`);
         bar.tick(fstat.size);

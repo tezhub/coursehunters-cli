@@ -48,7 +48,9 @@ function init() {
       if (subNavId === 'All') {
         subNavItemPath = _navItem.path;
       } else {
-        subNavItemPath = _navItem.subCategories.find(item => item.name === subNavId).path;
+        subNavItemPath = _navItem.subCategories.find(
+          item => item.name === subNavId
+        ).path;
       }
       // Fetch all courses for selected category/sub-category
       return scrapeCourses(subNavItemPath);
@@ -71,39 +73,45 @@ function init() {
     })
     .then(({ courseId }) => {
       const coursePath = _courses.find(course => course.name === courseId).path;
-      return inquirer
-        .prompt([
-          {
-            type: 'directory',
-            name: 'downloadPath',
-            message: 'Where you like to download this course?',
-            basePath: os.homedir(),
-          },
-        ])
-        .then(({ downloadPath }) => {
-          // Scrape course and download selected course
-          return scrapeAndDownload(coursePath, courseId, downloadPath);
+      return scrapeAndDownload(coursePath, courseId);
+    });
+}
+
+function scrapeAndDownload(coursePath, courseId) {
+  return inquirer
+    .prompt([
+      {
+        type: 'directory',
+        name: 'downloadPath',
+        message: 'Where you like to download this course?',
+        basePath: os.homedir(),
+      },
+    ])
+    .then(({ downloadPath }) => {
+      return scrapeCourse(coursePath)
+        .then(({ courseData, resources }) => {
+          if (courseData.length > 0) {
+            return downloadCourse(
+              courseData,
+              courseId,
+              downloadPath
+            ).then(() => {
+              // Download course resources
+              return downloadCourse(resources, courseId, downloadPath, true);
+            });
+          }
+          throw new Error('Scrapping course playlist failed!');
+        })
+        .then(() => {
+          return 'Completed';
         });
     });
 }
 
-function scrapeAndDownload(coursePath, courseId, downloadPath) {
-  return scrapeCourse(coursePath)
-    .then(({ courseData, resources }) => {
-      if (courseData.length > 0) {
-        return downloadCourse(courseData, courseId, downloadPath).then(() => {
-          // Download course resources
-          return downloadCourse(resources, courseId, downloadPath, true);
-        });
-      }
-      throw new Error('Scrapping course playlist failed!');
-    })
-    .then(() => {
-      return 'Completed';
-    });
-}
-
-function resumeCourse({ links, resources, courseId, rootDownloadPath }, isResource) {
+function resumeCourse(
+  { links, resources, courseId, rootDownloadPath },
+  isResource
+) {
   if (isResource) {
     // Download course resources
     return downloadCourse(resources, courseId, rootDownloadPath, true);

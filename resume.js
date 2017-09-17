@@ -15,37 +15,46 @@ module.exports = function() {
     spinner.info('No courses found to resume downloading');
     return;
   }
-  const config = JSON.parse(fs.readFileSync(`${homeDir}/.coursehunters.json`, 'utf8'));
+  const config = JSON.parse(
+    fs.readFileSync(`${homeDir}/.coursehunters.json`, 'utf8')
+  );
   if (!config.courses.length > 0) {
     spinner.info('No courses found to resume downloading');
     return;
   }
   const courses = config.courses
-    .filter(course => !course.downloadedCourse || !course.downloadedResources)
+    .filter(
+      course =>
+        !course.downloadedCourse ||
+        (!course.downloadedResources && course.resources.length > 0)
+    )
     .map(course => course.courseId);
   if (!courses.length > 0) {
     spinner.info('No courses found to resume downloading');
     return;
   }
-  console.log(courses);
   return inquirer
     .prompt([
       {
         type: 'list',
         name: 'courseId',
-        message: 'Select a course to download',
+        message: 'Select a course to resume',
         paginated: true,
         choices: courses,
       },
     ])
     .then(({ courseId }) => {
-      const course = config.courses.find(course => course.courseId === courseId);
+      const course = config.courses.find(
+        course => course.courseId === courseId
+      );
       if (!course.downloadedCourse) {
         spinner.info(`Resuming Course Download At: ${course.rootDownloadPath}`);
         return resumeCourse(course, false);
       }
       if (!course.downloadedResources) {
-        spinner.info(`Resuming Course Download Course At: ${course.rootDownloadPath}`);
+        spinner.info(
+          `Resuming Course Download Course At: ${course.rootDownloadPath}`
+        );
         return resumeCourse(course, true);
       }
     });
