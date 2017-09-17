@@ -19,7 +19,6 @@ const download = (
   const configExists = fileExists.sync(`${homeDir}/.coursehunters.json`);
   let config = {};
   if (configExists) {
-    console.log('Config Exists');
     config = JSON.parse(
       fs.readFileSync(`${homeDir}/.coursehunters.json`, 'utf8')
     );
@@ -28,7 +27,6 @@ const download = (
       course => course.courseId === courseId
     );
     if (!course && !isResource) {
-      console.log('Pushing new course');
       config.courses.push({
         courseId,
         links,
@@ -43,7 +41,6 @@ const download = (
     } else {
       course.resources = links;
       config.courses.splice(courseIndex, 1, course);
-      console.log('Course Exists, So updating with new data');
       fs.writeFileSync(
         `${homeDir}/.coursehunters.json`,
         JSON.stringify(config, null, 2)

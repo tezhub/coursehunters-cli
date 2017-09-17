@@ -77,31 +77,37 @@ if (flags.url) {
       const coursePath = urlData.pathname;
       const courseId = coursePath.split('/')[2];
       const homeDir = os.homedir();
+      // Check if course already requested for download if so resume
       const configExists = fileExists.sync(`${homeDir}/.coursehunters.json`);
       if (configExists) {
+        // Retrieve course data from local config file which we saved before
         const config = JSON.parse(
           fs.readFileSync(`${homeDir}/.coursehunters.json`, 'utf8')
         );
         if (config.courses.length > 0) {
-          const courses = config.courses
-            .filter(
-              course =>
-                !course.downloadedCourse ||
-                (!course.downloadedResources && course.resources.length > 0)
-            )
-            .map(course => course.courseId);
+          const courses = config.courses.filter(
+            course =>
+              !course.downloadedCourse ||
+              (!course.downloadedResources && course.resources.length > 0)
+          );
           const course = courses.find(course => course.courseId === courseId);
           if (course && !course.downloadedCourse) {
             spinner.info(
               `Resuming Course Download At: ${course.rootDownloadPath}`
             );
-            return resumeCourse(course, false);
+            // If course found and not downloaded fully then resume
+            return resumeCourse(course, false)
+              .then(console.log)
+              .catch(console.log);
           }
           if (course && !course.downloadedResources) {
             spinner.info(
               `Resuming Course Download Course At: ${course.rootDownloadPath}`
             );
-            return resumeCourse(course, true);
+            // If course found and resources are not downloaded the resume
+            return resumeCourse(course, true)
+              .then(console.log)
+              .catch(console.log);
           }
         }
       }
